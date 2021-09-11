@@ -18,8 +18,6 @@ public:
 
  bool initMainView();
 
- void startPlayer(const char* file);
-
 private:
 
  QScopedPointer<ui::MainWindow, QScopedPointerDeleteLater> main_window_;

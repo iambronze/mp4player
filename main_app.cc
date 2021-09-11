@@ -17,9 +17,4 @@ bool MainApp::initMainView() {
   }
   return true;
 }
-
-void MainApp::startPlayer(const char *file) {
-  main_window_->video_view()->start(file, true, 20, true);
-}
-
 }

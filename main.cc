@@ -10,7 +10,6 @@ int main(int argc, char *argv[]) {
   media::PacketQueue::Init();
   app::MainApp app(argc, argv);
   app.initMainView();
-  app.startPlayer("/data/jingxi/media/upload.mp4");
   app::MainApp::exec();
 
   c_RkRgaDeInit();
