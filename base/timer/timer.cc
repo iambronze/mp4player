@@ -6,9 +6,12 @@ namespace base {
 
 Timer::Timer(bool is_repeating)
     : is_repeating_(is_repeating),
-      e_(nullptr) {}
+      e_(nullptr) {
+  thread_checker_.DetachFromThread();
+}
 
 Timer::~Timer() {
+  DCHECK(thread_checker_.CalledOnValidThread());
   Stop();
   if (e_) {
     event_free(e_);
@@ -18,6 +21,8 @@ Timer::~Timer() {
 
 void Timer::Start(std::unique_ptr<QueuedTask> task,
                   const TimeDelta &delay) {
+  DCHECK(thread_checker_.CalledOnValidThread());
+
   Stop();
 
   struct event_base *ev = Thread::Base();
@@ -37,6 +42,7 @@ void Timer::Start(std::unique_ptr<QueuedTask> task,
 }
 
 void Timer::Stop() {
+  DCHECK(thread_checker_.CalledOnValidThread());
   if (e_) {
     event_del(e_);
   }

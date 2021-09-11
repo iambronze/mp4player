@@ -5,6 +5,7 @@
 #include "base/macros.h"
 #include "base/time/time.h"
 #include "base/callback.h"
+#include "base/threading/thread_checker.h"
 #include <event2/event.h>
 #include <event2/listener.h>
 
@@ -39,6 +40,8 @@ private:
  struct event *e_;
 
  std::unique_ptr<QueuedTask> task_;
+
+ ThreadChecker thread_checker_;
  DISALLOW_COPY_AND_ASSIGN(Timer);
 };
 }  // namespace base
