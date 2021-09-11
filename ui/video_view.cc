@@ -86,6 +86,7 @@ void VideoView::stop() {
   if (player_) {
     player_.reset();
   }
+  dataset_.reset();
 }
 
 void VideoView::pause() {

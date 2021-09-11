@@ -55,7 +55,7 @@ bool AudioDecoderThread::InitDecoder() {
     //AAC需要转换一下
     bitstream_converter_ = base::WrapUnique(new FFmpegAACBitstreamConverter(stream->codecpar));
   } else {
-    LOG(WARNING) << "Decode audio codec[" << stream->codecpar->codec_id << "] may be failed";
+    LOG(WARNING) << "Decode audio codec[" << stream->codecpar->codec_id << "] maybe fail";
   }
 
   resampler_ = base::WrapUnique(new FFmpegAudioResampler());
