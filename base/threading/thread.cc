@@ -262,6 +262,10 @@ void Thread::Run() {
   pump.Run();
 
   pump.CleanUp();
+
+  while (!incoming_queue_.empty()) {
+    incoming_queue_.pop();
+  }
 }
 
 void Thread::ReloadWorkQueue(TaskQueue *work_queue) {
