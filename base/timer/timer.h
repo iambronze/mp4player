@@ -13,7 +13,6 @@ extern "C" {
 struct event;
 
 namespace base {
-class Thread;
 
 class Timer {
 public:
