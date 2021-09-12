@@ -1,50 +1,47 @@
 #include <memory>
 #include "base/timer/timer.h"
 #include "base/threading/thread.h"
+#include "base/message_loop/message_loop.h"
+#include <event2/event.h>
 
 namespace base {
 
 Timer::Timer(bool is_repeating)
     : is_repeating_(is_repeating),
-      e_(nullptr) {
-  thread_checker_.DetachFromThread();
+      event_(nullptr) {
 }
 
 Timer::~Timer() {
-  DCHECK(thread_checker_.CalledOnValidThread());
   Stop();
-  if (e_) {
-    event_free(e_);
-    e_ = nullptr;
+  if (event_) {
+    event_free(event_);
+    event_ = nullptr;
   }
 }
 
 void Timer::Start(std::unique_ptr<QueuedTask> task,
                   const TimeDelta &delay) {
-  DCHECK(thread_checker_.CalledOnValidThread());
-
   Stop();
 
-  struct event_base *ev = Thread::Base();
+  struct event_base *ev = MessageLoop::current()->base();
   if (!ev) return;
 
   int event_mask = is_repeating_ ? EV_PERSIST : 0;
 
-  if (!e_) {
-    e_ = event_new(ev, -1, EV_TIMEOUT | event_mask, &Timer::RunTimer, this);
+  if (!event_) {
+    event_ = event_new(ev, -1, EV_TIMEOUT | event_mask, &Timer::RunTimer, this);
   } else {
-    event_assign(e_, ev, -1, EV_TIMEOUT | event_mask, &Timer::RunTimer, this);
+    event_assign(event_, ev, -1, EV_TIMEOUT | event_mask, &Timer::RunTimer, this);
   }
   timeval tv = {static_cast<__time_t>(delay.InSeconds()),
                 static_cast<__suseconds_t>(delay.InMicroseconds() % Time::kMicrosecondsPerSecond)};
-  event_add(e_, &tv);
+  event_add(event_, &tv);
   task_ = std::move(task);
 }
 
 void Timer::Stop() {
-  DCHECK(thread_checker_.CalledOnValidThread());
-  if (e_) {
-    event_del(e_);
+  if (event_) {
+    event_del(event_);
   }
   task_.reset();
 }

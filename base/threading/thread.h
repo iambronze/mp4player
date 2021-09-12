@@ -2,32 +2,26 @@
 #define BASE_THREADING_THREAD_H_
 
 #include <string>
-#include <queue>
-#include <event2/event.h>
-#include <event2/listener.h>
 #include "base/synchronization/lock.h"
 #include "base/threading/simple_thread.h"
 #include "base/callback.h"
+#include "base/message_loop/message_loop.h"
 
 namespace base {
 
-class Timer;
-
-class Thread
-    : public DelegateSimpleThread::Delegate {
+class Thread : public PlatformThread::Delegate {
 public:
- explicit Thread(const std::string &name,
-                 base::ThreadPriority priority = base::ThreadPriority::NORMAL);
+ explicit Thread(const std::string &name);
 
  ~Thread() override;
 
- void Start();
+ bool Start();
+
+ bool StartWithOptions(const SimpleThread::Options &options);
 
  void Stop();
 
- static Thread *Current();
-
- bool IsCurrent() const;
+ bool IsCurrent();
 
  void PostTask(std::unique_ptr<QueuedTask> task);
 
@@ -53,35 +47,44 @@ public:
  void PostDelayedTask(Closure &&closure, const base::TimeDelta &delay) {
    PostDelayedTask(NewClosure(std::forward<Closure>(closure)), delay);
  }
+
+ // Returns the name of this thread (for display in debugger too).
+ const std::string &thread_name() const { return name_; }
+
+ // The native thread handle.
+ PlatformThreadHandle thread_handle() { return thread_; }
+
+ PlatformThreadId GetThreadId() const;
+
+ bool IsRunning() const;
+
 private:
- class PendingTask;
- class MessagePump;
+ void ThreadMain() override;
 
- friend class Timer;
+ void StopSoon();
 
- typedef std::queue<std::unique_ptr<PendingTask>> TaskQueue;
+ std::string name_;
 
- void Run() override;
+ bool stopping_;
 
- void ScheduleWork();
-
- void ReloadWorkQueue(TaskQueue *work_queue);
-
- static struct event_base *Base();
-
- int wakeup_pipe_in_;
-
- int wakeup_pipe_out_;
-
- bool task_scheduled_;
+ mutable base::Lock running_lock_;
 
  bool running_;
 
+ PlatformThreadHandle thread_;
+
+ PlatformThreadId id_;
+
+ mutable base::Lock thread_lock_;
+
+ MessageLoop *message_loop_;
+
+ mutable WaitableEvent start_event_;
+
+ mutable Lock valid_thread_id_lock_;
+
  base::Lock lock_;
 
- TaskQueue incoming_queue_;
-
- std::unique_ptr<DelegateSimpleThread> thread_;
  DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 }  // namespace base
