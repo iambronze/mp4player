@@ -32,6 +32,7 @@ public:
  }
 
  void Stop();
+
 private:
 
  static void RunTimer(evutil_socket_t listener, short event, void *arg);

@@ -1,6 +1,5 @@
 #include <memory>
 #include "base/timer/timer.h"
-#include "base/threading/thread.h"
 #include "base/message_loop/message_loop.h"
 #include <event2/event.h>
 
