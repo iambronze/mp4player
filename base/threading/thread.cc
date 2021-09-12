@@ -15,6 +15,7 @@ Thread::Thread(const std::string &name)
       running_(false),
       thread_(0),
       id_(kInvalidThreadId),
+      id_event_(true, false),
       message_loop_(nullptr),
       start_event_(true, false) {
 }
@@ -33,6 +34,7 @@ bool Thread::Start() {
 }
 
 bool Thread::StartWithOptions(const SimpleThread::Options &options) {
+  id_event_.Reset();
   id_ = kInvalidThreadId;
 
   std::unique_ptr<MessageLoop> message_loop(new MessageLoop());
@@ -48,8 +50,6 @@ bool Thread::StartWithOptions(const SimpleThread::Options &options) {
       return false;
     }
   }
-
-  start_event_.Wait();
   // The ownership of message_loop is managemed by the newly created thread
   // within the ThreadMain.
   ignore_result(message_loop.release());
@@ -83,7 +83,7 @@ void Thread::StopSoon() {
 }
 
 PlatformThreadId Thread::GetThreadId() const {
-  base::AutoLock l(thread_id_lock_);
+  id_event_.Wait();
   return id_;
 }
 
@@ -95,11 +95,9 @@ bool Thread::IsRunning() const {
 }
 
 void Thread::ThreadMain() {
-  {
-    base::AutoLock l(thread_id_lock_);
-    id_ = PlatformThread::CurrentId();
-    DCHECK_NE(kInvalidThreadId, id_);
-  }
+  id_ = PlatformThread::CurrentId();
+  DCHECK_NE(kInvalidThreadId, id_);
+  id_event_.Signal();
 
   PlatformThread::SetName(name_);
 

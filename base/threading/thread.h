@@ -75,7 +75,7 @@ private:
 
  PlatformThreadId id_;
 
- mutable Lock thread_id_lock_;
+ mutable WaitableEvent id_event_;
 
  mutable base::Lock thread_lock_;
 
