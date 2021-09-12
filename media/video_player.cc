@@ -28,7 +28,9 @@ VideoPlayer::VideoPlayer(Delegate *delegate,
       mute_(false),
       thread_(new base::Thread("VideoPlayer")) {
   if (buffer_time_ < 0.2) buffer_time_ = 0.2;
-  thread_->Start();
+  base::SimpleThread::Options options;
+  options.set_priority(base::ThreadPriority::REALTIME_AUDIO);
+  thread_->StartWithOptions(options);
   thread_->PostTask(std::bind(&VideoPlayer::OnStart, this));
 }
 

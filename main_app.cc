@@ -1,5 +1,4 @@
 #include "main_app.h"
-#include "ui/video_view.h"
 
 namespace app {
 
