@@ -164,7 +164,6 @@ void MessageLoop::OnWakeup(evutil_socket_t socket, short flags, void *context) {
   DCHECK_EQ(nread, 1);
 
   auto ptr = reinterpret_cast<MessageLoop *>(context);
-  LOG(INFO) << "OnWakeup";
   for (;;) {
     TaskQueue work_queue;
     ptr->ReloadWorkQueue(&work_queue);
