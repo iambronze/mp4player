@@ -64,7 +64,7 @@ private:
 };
 
 MessageLoop::MessageLoop()
-    : event_base_(nullptr),
+    : event_base_(event_base_new()),
       wakeup_pipe_in_(-1),
       wakeup_pipe_out_(-1),
       wakeup_event_(nullptr),
@@ -93,8 +93,11 @@ MessageLoop::~MessageLoop() {
     if (IGNORE_EINTR(close(wakeup_pipe_out_)) < 0)
       DPLOG(ERROR) << "close";
   }
+  incoming_task_queue_->WillDestroyCurrentMessageLoop();
   incoming_task_queue_.reset();
   event_base_free(event_base_);
+  if (current() == this)
+    pthread_setspecific(GetQueuePtrTls(), nullptr);
 }
 
 bool MessageLoop::Init() {
@@ -115,17 +118,17 @@ bool MessageLoop::Init() {
   }
   wakeup_pipe_out_ = fds[0];
   wakeup_pipe_in_ = fds[1];
-  return true;
-}
-
-void MessageLoop::BindToCurrentThread() {
-  event_base_ = event_base_new();
   wakeup_event_ = event_new(event_base_,
                             wakeup_pipe_out_,
                             EV_READ | EV_PERSIST,
                             &MessageLoop::OnWakeup,
                             this);
-  event_add(wakeup_event_, nullptr);
+  if (event_add(wakeup_event_, nullptr))
+    return false;
+  return true;
+}
+
+void MessageLoop::BindToCurrentThread() {
   pthread_setspecific(GetQueuePtrTls(), this);
   incoming_task_queue_->StartScheduling();
 }
@@ -134,8 +137,6 @@ void MessageLoop::Run() {
   while (keep_running_) {
     event_base_loop(event_base_, EVLOOP_NO_EXIT_ON_EMPTY);
   }
-  incoming_task_queue_->WillDestroyCurrentMessageLoop();
-  pthread_setspecific(GetQueuePtrTls(), nullptr);
 }
 
 void MessageLoop::QuitNow() {
