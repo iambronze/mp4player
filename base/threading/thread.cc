@@ -23,9 +23,8 @@ Thread::~Thread() {
   Stop();
 }
 
-bool Thread::IsCurrent() {
-  base::AutoLock l(valid_thread_id_lock_);
-  return PlatformThread::CurrentId() == id_;
+bool Thread::IsCurrent() const {
+  return PlatformThread::CurrentId() == GetThreadId();
 }
 
 bool Thread::Start() {
@@ -34,10 +33,7 @@ bool Thread::Start() {
 }
 
 bool Thread::StartWithOptions(const SimpleThread::Options &options) {
-  {
-    base::AutoLock l(valid_thread_id_lock_);
-    id_ = kInvalidThreadId;
-  }
+  id_ = kInvalidThreadId;
 
   std::unique_ptr<MessageLoop> message_loop(new MessageLoop());
   message_loop_ = message_loop.get();
@@ -52,6 +48,8 @@ bool Thread::StartWithOptions(const SimpleThread::Options &options) {
       return false;
     }
   }
+
+  start_event_.Wait();
   // The ownership of message_loop is managemed by the newly created thread
   // within the ThreadMain.
   ignore_result(message_loop.release());
@@ -85,7 +83,7 @@ void Thread::StopSoon() {
 }
 
 PlatformThreadId Thread::GetThreadId() const {
-  base::AutoLock l(valid_thread_id_lock_);
+  base::AutoLock l(thread_id_lock_);
   return id_;
 }
 
@@ -98,7 +96,7 @@ bool Thread::IsRunning() const {
 
 void Thread::ThreadMain() {
   {
-    base::AutoLock l(valid_thread_id_lock_);
+    base::AutoLock l(thread_id_lock_);
     id_ = PlatformThread::CurrentId();
     DCHECK_NE(kInvalidThreadId, id_);
   }

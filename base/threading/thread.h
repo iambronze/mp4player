@@ -21,7 +21,7 @@ public:
 
  void Stop();
 
- bool IsCurrent();
+ bool IsCurrent() const;
 
  void PostTask(std::unique_ptr<QueuedTask> task);
 
@@ -75,15 +75,13 @@ private:
 
  PlatformThreadId id_;
 
+ mutable Lock thread_id_lock_;
+
  mutable base::Lock thread_lock_;
 
  MessageLoop *message_loop_;
 
  mutable WaitableEvent start_event_;
-
- mutable Lock valid_thread_id_lock_;
-
- base::Lock lock_;
 
  DISALLOW_COPY_AND_ASSIGN(Thread);
 };
