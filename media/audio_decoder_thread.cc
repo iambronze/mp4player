@@ -188,7 +188,7 @@ void AudioDecoderThread::OnNewFrame(AVFrame *frame) {
       return;
 
     MEDIA_BUFFER mb = RK_MPI_MB_CreateAudioBuffer(buffer_size, RK_FALSE);
-    memcpy(RK_MPI_MB_GetPtr(mb), (const int16_t *) output_samples[0], buffer_size);
+    memcpy(RK_MPI_MB_GetPtr(mb), (const uint8_t *) output_samples[0], buffer_size);
     RK_MPI_MB_SetSize(mb, buffer_size);
     //尝试修复 pts 问题
     if (frame->pts == static_cast<int64_t>(AV_NOPTS_VALUE)) {
