@@ -61,7 +61,7 @@ void WaitableEvent::Wait() {
 }
 
 bool WaitableEvent::TimedWait(const TimeDelta &wait_delta) {
-  int timeout_ms = static_cast<int>(wait_delta.InMilliseconds());
+  auto timeout_ms = static_cast<int64_t>(wait_delta.InMilliseconds());
   return TimedWait(timeout_ms);
 }
 
